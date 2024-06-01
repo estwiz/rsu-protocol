@@ -11,7 +11,7 @@ class QuicStreamEvent:
         end_stream (bool): Indicates whether the stream has ended.
     """
 
-    def __init__(self, stream_id, data, end_stream):
+    def __init__(self, stream_id: int, data: bytes, end_stream: bool):
         self.stream_id = stream_id
         self.data = data
         self.end_stream = end_stream

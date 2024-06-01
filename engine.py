@@ -103,7 +103,7 @@ async def run_client(server, server_port, configuration):
         configuration=configuration,
         create_protocol=AsyncQuicServer,
     ) as client:
-        await asyncio.ensure_future(client._client_handler.launch_echo())
+        await asyncio.ensure_future(client._client_handler.launch())
 
 
 class SessionTicketStore:
@@ -206,7 +206,7 @@ class AsyncQuicServer(QuicConnectionProtocol):
                 )
                 self._handlers[event.stream_id] = handler
                 handler.quic_event_received(event)
-                asyncio.ensure_future(handler.launch_echo())
+                asyncio.ensure_future(handler.launch())
             # existing stream
             else:
                 handler = self._handlers[event.stream_id]
@@ -304,7 +304,7 @@ class ServerRequestHandler:
         self.protocol.remove_handler(self.stream_id)
         self.connection.close()
 
-    async def launch_echo(self):
+    async def launch(self):
         """
         Launch the echo server.
         """
@@ -329,7 +329,7 @@ class ClientRequestHandler(ServerRequestHandler):
         """
         return self.connection.get_next_available_stream_id()
 
-    async def launch_echo(self):
+    async def launch(self):
         """
         Launch the echo client.
         """
