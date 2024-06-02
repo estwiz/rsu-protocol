@@ -3,6 +3,7 @@ import json
 from typing import Coroutine, Dict
 
 import pdu
+from dfa_server import ServerContext
 from quic import QuicConnection, QuicStreamEvent
 
 
@@ -20,25 +21,31 @@ async def server_proto(scope: Dict, conn: QuicConnection):
     Returns:
             None
     """
-    message: QuicStreamEvent = await conn.receive()
+    event: QuicStreamEvent = await conn.receive()
 
-    # Convert the received data into a Datagram object
-    dgram_in = pdu.Datagram.from_bytes(message.data)
-    print("[svr] received message: ", dgram_in.msg)
+    server: ServerContext = ServerContext(conn=conn)
 
-    # Get the stream ID from the received message
-    stream_id = message.stream_id
+    await server.handle_incoming_event(event=event)
 
-    # Modify the Datagram object to include an ACK and a response message
-    dgram_out = dgram_in
-    dgram_out.mtype |= pdu.MSG_TYPE_DATA_ACK
-    dgram_out.msg = "SVR-ACK: " + dgram_out.msg
+    # # Convert the received data into a Datagram object
+    # dgram_in = pdu.Datagram.from_bytes(message.data)
+    # stream_id = message.stream_id
 
-    # Convert the modified Datagram object back into bytes
-    rsp_msg = dgram_out.to_bytes()
+    # if message and dgram_in.mtype == pdu.MSG_TYPE_REQUEST_UPDATE:
+    #     print("Request for software update received")
 
-    # Create a new QuicStreamEvent with the modified response message
-    rsp_evnt = QuicStreamEvent(stream_id, rsp_msg, False)
+    #     # Create a new datagram with a test message
+    #     for x in range(3):
+    #         dgram_out = pdu.Datagram(
+    #             pdu.MSG_TYPE_START_SND_DATA, "Software update sent segement " + str(x)
+    #         )
+    #         rsp_event = QuicStreamEvent(message.stream_id, dgram_out.to_bytes(), False)
+    #         print("Sending segment " + str(x))
+    #         await conn.send(rsp_event)
 
-    # Send the response event back to the client
-    await conn.send(rsp_evnt)
+    #     dgram_out = pdu.Datagram(
+    #         pdu.MSG_TYPE_FINISH_SND_DATA, "Software update sent segment " + str(x + 1)
+    #     )
+    #     print("Sending segment " + str(x + 1))
+    #     rsp_event = QuicStreamEvent(message.stream_id, dgram_out.to_bytes(), True)
+    #     await conn.send(rsp_event)
