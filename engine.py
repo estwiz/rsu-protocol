@@ -76,7 +76,7 @@ async def run_server(server: str, server_port: int, configuration: QuicConfigura
         server_port (int): The server port.
         configuration (QuicConfiguration): The server configuration.
     """
-    print("[svr] Server starting...")
+    print("[server] Server starting ...")
     await serve(
         host=server,
         port=server_port,
@@ -97,6 +97,7 @@ async def run_client(server, server_port, configuration):
         server_port (int): The server port.
         configuration (QuicConfiguration): The client configuration.
     """
+    print("[client] Client starting ...")
     async with connect(
         host=server,
         port=server_port,
@@ -271,6 +272,7 @@ class ServerRequestHandler:
         self.queue.put_nowait(
             QuicStreamEvent(event.stream_id, event.data, event.end_stream)
         )
+        # print("Event received: ", event.data.decode("utf-8"))
 
     async def receive(self) -> QuicStreamEvent:
         """
