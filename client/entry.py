@@ -2,13 +2,13 @@ import base64
 import json
 from typing import Dict
 
-import pdu
-from data_processor import DataAssembler
-from dfa_client import ClientContext
-from quic import QuicConnection, QuicStreamEvent
+import common.pdu as pdu
+from client.dfa import ClientContext
+from common.data_processor import DataAssembler
+from common.quic import QuicConnection, QuicStreamEvent
 
 
-async def client_proto(scope: Dict, conn: QuicConnection):
+async def run(scope: Dict, conn: QuicConnection):
     """
     This function represents the client-side logic for the QUIC echo client.
 

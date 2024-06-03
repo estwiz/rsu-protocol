@@ -1,10 +1,10 @@
 import asyncio
 from typing import Tuple
 
-import pdu
-from data_processor import DataSegmenter
-from pdu import Datagram
-from quic import QuicConnection, QuicStreamEvent
+import common.pdu as pdu
+from common.data_processor import DataSegmenter
+from common.pdu import Datagram, VersionExchangeDatagram
+from common.quic import QuicConnection, QuicStreamEvent
 
 
 class ServerState:
@@ -15,6 +15,15 @@ class ServerState:
         raise NotImplementedError("handle_incoming_event not implemented")
 
 
+# class AwaitingVerExchangeState(ServerState):
+#     async def handle_incoming_event(self, event: QuicStreamEvent):
+#         dgram_in = VersionExchangeDatagram.from_bytes(event.data)
+
+#         if dgram_in.mtype == pdu.MSG_TYPE_VERSION_EXCHANGE:
+#             print("Received Version Exchange from client")
+#             self.server.set_state(IdleState(self.server))
+
+
 class IdleState(ServerState):
     async def handle_incoming_event(self, event: QuicStreamEvent):
         dgram_in = Datagram.from_bytes(event.data)
@@ -23,12 +32,10 @@ class IdleState(ServerState):
         if dgram_in.mtype == pdu.MSG_TYPE_REQUEST_UPDATE:
             # Set the state to SendingState
             self.server.set_state(SendingState(self.server))
-            await self._send_firmware(
-                stream_id, firmware_path="firmware_send/firmware.bin"
-            )
+            await self._send_firmware(stream_id)
 
     async def _send_firmware(
-        self, stream_id: int, firmware_path: str = "firmware_send/firmware.bin"
+        self, stream_id: int, firmware_path: str = "./server/firmware/firmware.bin"
     ) -> None:
 
         data_segmenter = DataSegmenter(firmware_path)

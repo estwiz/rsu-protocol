@@ -1,8 +1,8 @@
 from typing import Optional, Union
 
-import pdu
-from data_processor import DataAssembler
-from quic import QuicStreamEvent
+import common.pdu as pdu
+from common.data_processor import DataAssembler
+from common.quic import QuicStreamEvent
 
 
 class ClientState:
@@ -39,7 +39,7 @@ class RequestingState(ClientState):
     async def handle_incoming_event(self, event: Optional[QuicStreamEvent]):
         await self._receive_data()
 
-    async def _receive_data(self, save_path: str = "firmware_rcvd/firmware.bin"):
+    async def _receive_data(self, save_path: str = "./client/firmware/firmware.bin"):
         firmware_received = b""
         assembler = DataAssembler()
 

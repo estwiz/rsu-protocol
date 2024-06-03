@@ -2,12 +2,12 @@ import asyncio
 import json
 from typing import Coroutine, Dict
 
-import pdu
-from dfa_server import ServerContext
-from quic import QuicConnection, QuicStreamEvent
+import common.pdu as pdu
+from common.quic import QuicConnection, QuicStreamEvent
+from server.dfa_server import ServerContext
 
 
-async def server_proto(scope: Dict, conn: QuicConnection):
+async def run(scope: Dict, conn: QuicConnection):
     """
     Echo server protocol implementation.
 

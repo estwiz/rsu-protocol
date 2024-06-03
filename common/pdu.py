@@ -1,19 +1,22 @@
 import base64
 import json
 
-# Message codes
-MSG_TYPE_REQUEST_UPDATE = 0x00
-MSG_TYPE_START_RCV_DATA = 0x01
-MSG_TYPE_FINISH_RCV_DATA = 0x02
-MSG_TYPE_SEND_ACK = 0x03
-MSG_TYPE_START_SND_DATA = 0x04
-MSG_TYPE_FINISH_SND_DATA = 0x05
-MSG_TYPE_RECEIVE_ACK = 0x06
-MSG_TYPE_ERROR = 0x07
+# Message types
+MSG_TYPE_VERSION_EXCHANGE = 0x00
+MSG_TYPE_VERSION_ACK = 0x01
+MSG_TYPE_REQUEST_UPDATE = 0x02
+MSG_TYPE_START_RCV_DATA = 0x03
+MSG_TYPE_FINISH_RCV_DATA = 0x04
+MSG_TYPE_SEND_ACK = 0x05
+MSG_TYPE_START_SND_DATA = 0x06
+MSG_TYPE_FINISH_SND_DATA = 0x07
+MSG_TYPE_RECEIVE_ACK = 0x08
+MSG_TYPE_ERROR = 0x09
 
 
 class VersionExchangeDatagram:
-    def __init__(self, protocol_ver: str, firmware_ver: str):
+    def __init__(self, mtype: int, protocol_ver: str, firmware_ver: str):
+        self.mtype = mtype
         self.protocol_ver = protocol_ver
         self.firmware_ver = firmware_ver
 

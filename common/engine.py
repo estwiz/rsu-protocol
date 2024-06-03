@@ -8,14 +8,14 @@ from aioquic.quic.configuration import QuicConfiguration
 from aioquic.quic.events import StreamDataReceived
 from aioquic.tls import SessionTicket
 
-import rsu_client
-import rsu_server
-from quic import QuicConnection, QuicStreamEvent
+import client.entry as client_entry
+import server.entry as server_entry
+from common.quic import QuicConnection, QuicStreamEvent
 
 # ALPN_PROTOCOL: A string representing the ALPN (Application-Layer Protocol Negotiation) protocol used by the QUIC connections.
 # SERVER_MODE: An integer constant representing the server mode.
 # CLIENT_MODE: An integer constant representing the client mode.
-ALPN_PROTOCOL = "echo-protocol"
+ALPN_PROTOCOL = "rsu-protocol"
 SERVER_MODE = 0
 CLIENT_MODE = 1
 
@@ -311,7 +311,7 @@ class ServerRequestHandler:
         Launch the echo server.
         """
         quic_conn = QuicConnection(self.send, self.receive, self.close, None)
-        await rsu_server.server_proto(self.scope, quic_conn)
+        await server_entry.run(self.scope, quic_conn)
 
 
 class ClientRequestHandler(ServerRequestHandler):
@@ -338,4 +338,4 @@ class ClientRequestHandler(ServerRequestHandler):
         quic_conn = QuicConnection(
             self.send, self.receive, self.close, self.get_next_stream_id
         )
-        await rsu_client.client_proto(self.scope, quic_conn)
+        await client_entry.run(self.scope, quic_conn)
