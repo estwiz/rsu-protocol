@@ -16,6 +16,10 @@ The RSU protocol is implemented in Python.
 Watch this video on youtube: [RSU Protocol Demo](https://youtu.be/JYie57dOFFs)
 
 
+## Implementation Summary
+Read the implementation summary [here](./P3-Implementation%20Summary.pdf)
+
+
 ## Features
 - **Secure Communication**: The RSU protocol uses TLS 1.3 to secure the communication between the server and the devices.
 - **Reliable Communication**: The RSU protocol uses QUIC to provide reliable communication between the server and the devices.

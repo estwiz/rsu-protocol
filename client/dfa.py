@@ -7,6 +7,8 @@ from common.quic import QuicStreamEvent
 
 
 class ClientState:
+    """Base class for client state"""
+
     def __init__(self, client: "ClientContext"):
         self.client = client
 
@@ -15,6 +17,10 @@ class ClientState:
 
 
 class IdleState(ClientState):
+    """
+    Initial state for the client.
+    Waits for the server to send a version exchange request.
+    """
 
     async def handle_incoming_event(self, event: Optional[QuicStreamEvent]):
         await self._send_ver_exchange_request()
@@ -40,6 +46,7 @@ class IdleState(ClientState):
 
 
 class RequestVersionExchangeState(ClientState):
+    """State for the client to wait for the server to send a version ack."""
 
     async def handle_incoming_event(self, event: Optional[QuicStreamEvent]):
         # Check if version are compatible
@@ -61,6 +68,7 @@ class RequestVersionExchangeState(ClientState):
 
 
 class ReceivingFirmwareState(ClientState):
+    """State for the client to receive firmware from the server."""
 
     async def handle_incoming_event(self, event: Optional[QuicStreamEvent]):
         await self._receive_data()
@@ -100,10 +108,17 @@ class ReceivingFirmwareState(ClientState):
 
 
 class SendingAckState(ClientState):
+    """
+    State for the client to send an ACK to the server.
+    No implementation here because logic is in ReceivingFirmwareState.
+    """
+
     pass
 
 
 class ClientContext:
+    """Context for the client state machine."""
+
     def __init__(self, conn):
         self.conn = conn
         self.state = IdleState(self)

@@ -13,6 +13,8 @@ from server.version import ServerVer
 
 
 class ServerState:
+    """Base class for server state."""
+
     def __init__(self, server: "ServerContext"):
         self.server = server
 
@@ -21,6 +23,11 @@ class ServerState:
 
 
 class AwaitingVerExchangeState(ServerState):
+    """
+    Initial state for the server.
+    Waits for the client to send a version exchange request.
+    """
+
     async def handle_incoming_event(self, event: QuicStreamEvent):
         dgram_in = Datagram.from_bytes(event.data)
         if dgram_in.mtype == pdu.MSG_TYPE_VERSION_EXCHANGE:
@@ -49,6 +56,10 @@ class AwaitingVerExchangeState(ServerState):
 
 
 class SendingState(ServerState):
+    """
+    State for the server to wait for a request from the client.
+    """
+
     async def handle_incoming_event(self, event: QuicStreamEvent):
         dgram_in = Datagram.from_bytes(event.data)
         # stream_id = event.stream_id
@@ -83,6 +94,10 @@ class SendingState(ServerState):
 
 
 class AwaitingAckState(ServerState):
+    """
+    A state for the server to wait for an ACK from the client.
+    """
+
     async def handle_incoming_event(self, event: QuicStreamEvent):
         dgram_in = Datagram.from_bytes(event.data)
 
@@ -92,6 +107,8 @@ class AwaitingAckState(ServerState):
 
 
 class ServerContext:
+    """Context class for the server state machine."""
+
     def __init__(self, conn: QuicConnection):
         self.conn = conn
         self.state = AwaitingVerExchangeState(self)
