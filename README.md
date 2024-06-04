@@ -1,9 +1,7 @@
 # rsu-protocol
 
 ## Introduction
-This paper proposed a specification for a network protocol that will be used for remote software
-update of devices over the internet. The remote software update (RSU) protocol will lie on top of
-QUIC and will live in the user space of both the server and the devices. 
+This project is an implementation for a remote software update (RSU) protocol that could be used for remote software update of devices over the internet. The RSU protocol will lie on top of QUIC and will live in the user space of both the server and the devices. 
 
 The RSU protocol acts as a communication channel between a central server and the remote
 devices. Through this network, the remote devices can request software updates from the server and the server can send software updates to the devices.
