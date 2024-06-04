@@ -20,8 +20,12 @@ async def run(scope: Dict, conn: QuicConnection):
     """
 
     client: ClientContext = ClientContext(conn=conn)
-    # Start client and send request to server
+    # Start client and send version exchange
     await client.handle_incoming_event(event=None)
 
-    # Gather the response from the server
+    # Receive the version acknowledgment and send firmware update request
+    event_ver_ack = await conn.receive()
+    await client.handle_incoming_event(event=event_ver_ack)
+
+    # Receive the firmware update and send the firmware update acknowledgment
     await client.handle_incoming_event(event=None)

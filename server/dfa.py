@@ -2,9 +2,14 @@ import asyncio
 from typing import Tuple
 
 import common.pdu as pdu
+from common.custom_exceptions import (
+    IncompatibleFirmwareVersion,
+    IncompatibleProtocolVersion,
+)
 from common.data_processor import DataSegmenter
-from common.pdu import Datagram, VersionExchangeDatagram
+from common.pdu import Datagram
 from common.quic import QuicConnection, QuicStreamEvent
+from server.version import ServerVer
 
 
 class ServerState:
@@ -15,29 +20,47 @@ class ServerState:
         raise NotImplementedError("handle_incoming_event not implemented")
 
 
-# class AwaitingVerExchangeState(ServerState):
-#     async def handle_incoming_event(self, event: QuicStreamEvent):
-#         dgram_in = VersionExchangeDatagram.from_bytes(event.data)
-
-#         if dgram_in.mtype == pdu.MSG_TYPE_VERSION_EXCHANGE:
-#             print("Received Version Exchange from client")
-#             self.server.set_state(IdleState(self.server))
-
-
-class IdleState(ServerState):
+class AwaitingVerExchangeState(ServerState):
     async def handle_incoming_event(self, event: QuicStreamEvent):
         dgram_in = Datagram.from_bytes(event.data)
-        stream_id = event.stream_id
+        if dgram_in.mtype == pdu.MSG_TYPE_VERSION_EXCHANGE:
+            print("Received version exchange request from client")
+            if dgram_in.protocol_ver <= ServerVer.protocol:
+                print("\tProtocol version match")
+            else:
+                raise IncompatibleProtocolVersion()
+
+            if dgram_in.firmware_ver < ServerVer.firmware:
+                print("\tFirmware version match")
+            else:
+                raise IncompatibleFirmwareVersion()
+
+            # Send version ack
+            dgram_out = Datagram(
+                mtype=pdu.MSG_TYPE_VERSION_ACK,
+                protocol_ver=ServerVer.protocol,
+                firmware_ver=ServerVer.firmware,
+            )
+            response_event = QuicStreamEvent(
+                event.stream_id, dgram_out.to_bytes(), True
+            )
+            self.server.set_state(SendingState(self.server))
+            await self.server.conn.send(response_event)
+
+
+class SendingState(ServerState):
+    async def handle_incoming_event(self, event: QuicStreamEvent):
+        dgram_in = Datagram.from_bytes(event.data)
+        # stream_id = event.stream_id
+        stream_id = event.stream_id + 1
 
         if dgram_in.mtype == pdu.MSG_TYPE_REQUEST_UPDATE:
-            # Set the state to SendingState
-            self.server.set_state(SendingState(self.server))
             await self._send_firmware(stream_id)
 
     async def _send_firmware(
         self, stream_id: int, firmware_path: str = "./server/firmware/firmware.bin"
     ) -> None:
-
+        print("Request for firmware update received")
         data_segmenter = DataSegmenter(firmware_path)
         segments: Tuple[int, bytes] = data_segmenter.get_segments()
 
@@ -59,29 +82,19 @@ class IdleState(ServerState):
         self.server.set_state(AwaitingAckState(self.server))
 
 
-class SendingState(ServerState):
-    """
-    Sending state for the server.
-    It does not handle any incoming events.
-    it transitions to AwaitingAckState after sending the firmware.
-    """
-
-    pass
-
-
 class AwaitingAckState(ServerState):
     async def handle_incoming_event(self, event: QuicStreamEvent):
         dgram_in = Datagram.from_bytes(event.data)
 
         if dgram_in.mtype == pdu.MSG_TYPE_RECEIVE_ACK:
             print("Received ACK from client")
-            self.server.set_state(IdleState(self.server))
+            self.server.set_state(AwaitingVerExchangeState(self.server))
 
 
 class ServerContext:
     def __init__(self, conn: QuicConnection):
         self.conn = conn
-        self.state = IdleState(self)
+        self.state = AwaitingVerExchangeState(self)
 
     def set_state(self, state: ServerState):
         self.state = state

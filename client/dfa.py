@@ -1,6 +1,7 @@
 from typing import Optional, Union
 
 import common.pdu as pdu
+from client.version import ClientVer
 from common.data_processor import DataAssembler
 from common.quic import QuicStreamEvent
 
@@ -16,11 +17,15 @@ class ClientState:
 class IdleState(ClientState):
 
     async def handle_incoming_event(self, event: Optional[QuicStreamEvent]):
-        await self._send_request()
+        await self._send_ver_exchange_request()
 
-    async def _send_request(self):
-        # Create a new datagram with a test message
-        datagram = pdu.Datagram(mtype=pdu.MSG_TYPE_REQUEST_UPDATE, payload=b"")
+    async def _send_ver_exchange_request(self):
+        # Create a new datagram for version exchange
+        datagram = pdu.Datagram(
+            mtype=pdu.MSG_TYPE_VERSION_EXCHANGE,
+            protocol_ver=ClientVer.protocol,
+            firmware_ver=ClientVer.firmware,
+        )
 
         # Start a new stream and get its id
         new_stream_id = self.client.conn.new_stream()
@@ -30,11 +35,32 @@ class IdleState(ClientState):
             stream_id=new_stream_id, data=datagram.to_bytes(), end_stream=False
         )
         await self.client.conn.send(qs)
+        print("Request for version exchange sent")
+        self.client.set_state(RequestVersionExchangeState(self.client))
+
+
+class RequestVersionExchangeState(ClientState):
+
+    async def handle_incoming_event(self, event: Optional[QuicStreamEvent]):
+        # Check if version are compatible
+        dgram_in = pdu.Datagram.from_bytes(event.data)
+        if dgram_in.mtype == pdu.MSG_TYPE_VERSION_ACK:
+            await self._firmware_request(event)
+
+    async def _firmware_request(self, event):
+        # Create a new datagram with a test message
+        datagram = pdu.Datagram(mtype=pdu.MSG_TYPE_REQUEST_UPDATE, payload=b"")
+
+        # Create a QuicStreamEvent with the stream id and the datagram data in bytes
+        qs = QuicStreamEvent(
+            stream_id=event.stream_id, data=datagram.to_bytes(), end_stream=True
+        )
+        await self.client.conn.send(qs)
         print("Request for firmware sent")
-        self.client.set_state(RequestingState(self.client))
+        self.client.set_state(ReceivingFirmwareState(self.client))
 
 
-class RequestingState(ClientState):
+class ReceivingFirmwareState(ClientState):
 
     async def handle_incoming_event(self, event: Optional[QuicStreamEvent]):
         await self._receive_data()
@@ -46,10 +72,9 @@ class RequestingState(ClientState):
         # Receive multiple segments of data from server
         while True:
             event = await self.client.conn.receive()
-            self.client.set_state(RecievingState(self.client))
+            self.client.set_state(ReceivingFirmwareState(self.client))
             dgram_in = pdu.Datagram.from_bytes(event.data)
 
-            # firmware_received += base64.b64decode(dgram_in.payload)
             assembler.add_segment(dgram_in.payload)
 
             if dgram_in.mtype == pdu.MSG_TYPE_FINISH_SND_DATA:
@@ -64,7 +89,6 @@ class RequestingState(ClientState):
                 stream_id=event.stream_id, data=ack_datagram.to_bytes(), end_stream=True
             )
             await self.client.conn.send(qs)
-            self.client.set_state(IdleState(self.client))
 
         # Save firmware as a binary file
         firmware_received = assembler.assemble()
@@ -72,9 +96,7 @@ class RequestingState(ClientState):
             firmware_file.write(firmware_received)
             print(f"Firmware received and saved at {save_path}")
 
-
-class RecievingState(ClientState):
-    pass
+        self.client.set_state(IdleState(self.client))
 
 
 class SendingAckState(ClientState):

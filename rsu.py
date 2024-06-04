@@ -11,8 +11,7 @@ def client_mode(args):
     Args:
         args (argparse.Namespace): The command-line arguments.
 
-    Returns:
-        None
+    Returns: None
     """
     server_address = args.server
     server_port = args.port
@@ -29,8 +28,7 @@ def server_mode(args):
     Args:
         args (argparse.Namespace): The command-line arguments.
 
-    Returns:
-        None
+    Returns: None
     """
     listen_address = args.listen
     listen_port = args.port

@@ -14,35 +14,23 @@ MSG_TYPE_RECEIVE_ACK = 0x08
 MSG_TYPE_ERROR = 0x09
 
 
-class VersionExchangeDatagram:
-    def __init__(self, mtype: int, protocol_ver: str, firmware_ver: str):
-        self.mtype = mtype
-        self.protocol_ver = protocol_ver
-        self.firmware_ver = firmware_ver
-
-    def to_json(self):
-        return json.dumps(self.__dict__)
-
-    @staticmethod
-    def from_json(json_str):
-        return VersionExchangeDatagram(**json.loads(json_str))
-
-    def to_bytes(self):
-        return json.dumps(self.__dict__).encode("utf-8")
-
-    @staticmethod
-    def from_bytes(json_bytes: bytes) -> "VersionExchangeDatagram":
-        return VersionExchangeDatagram(**json.loads(json_bytes.decode("utf-8")))
-
-
 class Datagram:
     """
     Represents a datagram object used in network communication.
     """
 
-    def __init__(self, mtype: int, payload: bytes, size: int = 0):
+    def __init__(
+        self,
+        mtype: int,
+        payload: bytes = b"",
+        protocol_ver: str = "",
+        firmware_ver: str = "",
+        size: int = 0,
+    ):
         self.mtype = mtype
         self.payload = base64.b64encode(payload).decode("utf-8")
+        self.protocol_ver = protocol_ver
+        self.firmware_ver = firmware_ver
         self.size = len(self.payload)
 
     def to_json(self):

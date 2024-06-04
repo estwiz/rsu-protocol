@@ -4,7 +4,7 @@ from typing import Coroutine, Dict
 
 import common.pdu as pdu
 from common.quic import QuicConnection, QuicStreamEvent
-from server.dfa_server import ServerContext
+from server.dfa import ServerContext
 
 
 async def run(scope: Dict, conn: QuicConnection):
@@ -20,8 +20,13 @@ async def run(scope: Dict, conn: QuicConnection):
 
     Returns: None
     """
-    event: QuicStreamEvent = await conn.receive()
 
     server: ServerContext = ServerContext(conn=conn)
 
-    await server.handle_incoming_event(event=event)
+    # Start the server and wait for the version exchange
+    event_ver_ex: QuicStreamEvent = await conn.receive()
+    await server.handle_incoming_event(event=event_ver_ex)
+
+    # Wait for the request for the firmware update and send data
+    event_fw_update: QuicStreamEvent = await conn.receive()
+    await server.handle_incoming_event(event=event_fw_update)

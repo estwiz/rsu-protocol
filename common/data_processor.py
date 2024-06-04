@@ -23,7 +23,7 @@ class DataSegmenter:
             self.segments += ((segment_num, self.data[i : i + self.segment_len]),)
             segment_num += 1
 
-    def get_segments(self):
+    def get_segments(self) -> Tuple[int, bytes]:
         print("Data segmented successfully")
         return self.segments
 
