@@ -41,12 +41,12 @@ def server_mode(args):
 
 def parse_args():
     """
-    Parse command line arguments for the Echo example.
+    Parse command line arguments for the RSU protocol.
 
     Returns:
         argparse.Namespace: Parsed command line arguments.
     """
-    parser = argparse.ArgumentParser(description="Echo example")
+    parser = argparse.ArgumentParser(description="RSU protocol")
     subparsers = parser.add_subparsers(
         dest="mode", help="Mode to run the application in", required=True
     )

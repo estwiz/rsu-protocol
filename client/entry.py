@@ -10,11 +10,11 @@ from common.quic import QuicConnection, QuicStreamEvent
 
 async def run(scope: Dict, conn: QuicConnection):
     """
-    This function represents the client-side logic for the QUIC echo client.
+    This function represents the client-side logic for the QUIC rsu client.
 
     Args:
         scope (Dict): The scope of the client connection.
-        conn (EchoQuicConnection): The QUIC connection object.
+        conn (QuicConnection): The QUIC connection object.
 
     Returns: None
     """

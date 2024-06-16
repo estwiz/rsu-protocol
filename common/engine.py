@@ -308,7 +308,7 @@ class ServerRequestHandler:
 
     async def launch(self):
         """
-        Launch the echo server.
+        Launch the rsu server.
         """
         quic_conn = QuicConnection(self.send, self.receive, self.close, None)
         await server_entry.run(self.scope, quic_conn)
@@ -333,7 +333,7 @@ class ClientRequestHandler(ServerRequestHandler):
 
     async def launch(self):
         """
-        Launch the echo client.
+        Launch the rsu client.
         """
         quic_conn = QuicConnection(
             self.send, self.receive, self.close, self.get_next_stream_id

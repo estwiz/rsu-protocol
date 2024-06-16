@@ -19,7 +19,7 @@ class QuicStreamEvent:
 
 class QuicConnection:
     """
-    Represents a QUIC connection for echoing messages.
+    Represents a QUIC connection.
 
     Args:
         send (Coroutine[QuicStreamEvent, None, None]): A coroutine function used for sending messages.
